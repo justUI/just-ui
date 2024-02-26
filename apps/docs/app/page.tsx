@@ -54,7 +54,7 @@ const LINKS = [
 export default function Page(): JSX.Element {
   return (
     <main className="">
-      <Button className="b" appName="docs">
+      <Button className="">
         cool
       </Button>
     </main>
