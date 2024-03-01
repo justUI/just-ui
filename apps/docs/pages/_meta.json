@@ -1,5 +1,15 @@
 {
-    "index": "My Homepage",
-    "contact": "Contact Us",
-    "about": "About Us"
+  "index": {
+    "title": "Home",
+    "type": "page"
+  },
+  "docs": {
+    "title": "Docs",
+    "type": "page"
+  },
+  "about": {
+    "title": "Github",
+    "type": "page",
+    "href": "https://github.com/code-with-onye"
   }
+}
