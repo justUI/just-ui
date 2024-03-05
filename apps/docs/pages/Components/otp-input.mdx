@@ -1,0 +1,193 @@
+---
+title: Otp Input
+description: A vertically stacked set of interactive headings that each reveal a section of content.
+component: true
+---
+
+import { OtpInput } from "@repo/ui/otpInput";
+
+# OTPInput
+
+A reusable copy and paste one time password(OTP) input component for React applications
+
+## Introduction
+
+The `OtpInput` component is a reusable React component that provides an input field for entering One-Time Passwords (OTPs) or other types of codes.
+It allows you to specify the number of input slots and handles various input events like typing, pasting, and backspacing.
+
+## Demo
+
+<div className="w-full mt-4 px-4  grid place-content-center">
+ <OtpInput
+        onComplete={(code) => {
+          console.log(code);
+        }}
+        slots={4}
+        separator="-"
+      />
+</div>
+
+
+
+## Features
+
+- Customizable number of input slots
+- Support for different input types: text, password, and telephone
+- Automatic focus on the next input field when typing or pasting
+- Sanitization of pasted data for telephone input type
+- Callback function when OTP input is complete
+
+## Instalation
+
+1. **Copy and paste the following code into your project**
+<div className=" h-80 overflow-y-auto">
+```tsx copy filename="shared/otp-input.tsx"
+"use client";
+import { Input } from "@/ui/input";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+
+interface OTPInputProps {
+  slots: number;
+  onComplete: (otp: string) => void;
+  separator?: string;
+  inputType?: "text" | "password" | "tel";
+}
+
+export const OtpInput: React.FC<OTPInputProps> = ({
+  onComplete,
+  slots,
+  separator = "",
+  inputType = "tel",
+}) => {
+  const inputs = useRef<any>([]);
+  const [otp, setOtp] = useState<string>("");
+
+  useEffect(() => {
+    if (inputs.current.length > 0) {
+      inputs.current[0].focus();
+    }
+  }, []);
+
+  const focusNext = (index: number) => {
+    if (index < inputs.current.length - 1) {
+      inputs.current[index + 1].focus();
+    }
+  };
+
+  const focusPrev = (index: number) => {
+    if (index > 0) {
+      inputs.current[index - 1].focus();
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    const isNumber = /^\d+$/.test(val);
+
+    if (inputType === "tel" || !inputType) {
+      if (isNumber) {
+        setOtp(otp + val);
+        focusNext(inputs.current.indexOf(e.target));
+      }
+    } else if (inputType === "text" || inputType === "password") {
+      setOtp(otp + val);
+      focusNext(inputs.current.indexOf(e.target));
+    }
+  };
+
+  const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace") {
+      const nextOtpValue = otp.slice(0, -1);
+      setOtp(nextOtpValue);
+
+      focusPrev(inputs.current.indexOf(e.currentTarget));
+    } else {
+      if (otp.length === slots) {
+        onComplete(otp);
+      }
+    }
+  };
+
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent<HTMLInputElement>) => {
+      e.preventDefault();
+      const pastedData = e.clipboardData.getData("text/plain");
+
+      if (inputType === "tel" || !inputType) {
+        const sanitizedData = pastedData.slice(0, slots).replace(/\D/g, "");
+        setOtp(sanitizedData);
+
+        const values = sanitizedData.split("");
+        inputs.current.forEach((input, idx) => {
+          input.value = values[idx] || "";
+        });
+
+        if (sanitizedData.length === slots) {
+          onComplete(sanitizedData);
+        } else {
+          const nextFocus = Math.min(
+            inputs.current.length - 1,
+            sanitizedData.length
+          );
+          inputs.current[nextFocus].focus();
+        }
+      } else if (inputType === "text" || inputType === "password") {
+        const sanitizedData = pastedData.slice(0, slots);
+        setOtp(sanitizedData);
+
+        const values = sanitizedData.split("");
+        inputs.current.forEach((input, idx) => {
+          input.value = values[idx] || "";
+        });
+
+        if (sanitizedData.length === slots) {
+          onComplete(sanitizedData);
+        } else {
+          const nextFocus = Math.min(
+            inputs.current.length - 1,
+            sanitizedData.length
+          );
+          inputs.current[nextFocus].focus();
+        }
+      }
+    },
+    [slots, onComplete, inputType]
+  );
+
+  return (
+    <div className="flex items-center gap-x-4">
+      {Array(slots)
+        .fill(0)
+        .map((_, idx) => (
+          <React.Fragment key={idx}>
+            <Input
+              ref={(el) => (inputs.current[idx] = el!)}
+              className="w-20 h-20 text-center text-3xl shadow"
+              type={inputType}
+              maxLength={1}
+              value={otp[idx] ?? ""}
+              onChange={handleChange}
+              onKeyUp={handleKeyUp}
+              onPaste={handlePaste}
+            />
+            {idx < slots - 1 && separator && <span>{separator}</span>}
+          </React.Fragment>
+        ))}
+    </div>
+  );
+};
+```
+</div>
+
+2. **Update the import paths to match your project setup.t**
+```tsx copy
+   import {OTPInput} from "@/shared/otp-input"
+```
+
+3. **Provide an `onComplete` callback that will be invoked when the full OTP code is entered by the user.**
+```js
+interface OTPInputProps {
+  onComplete: (otp: string) => void; 
+} 
+```
+
